@@ -6,7 +6,7 @@
 #            Pterodactyl Installer, Updater, Remover and More          #
 # Copyright 2023, dension - Silverhost.hu, <madarasz.laszlo@gmail.com> #
 # https://github.com/dension0/Pterodactyl-Installer/edit/main/LICENSE  #
-#        based on Copyright 2022, Malthe K, <me@malthe.cc> hej         #
+#                  based on Malthe K, <me@malthe.cc>                   #
 # https://github.com/guldkage/Pterodactyl-Installer/blob/main/LICENSE  #
 #                                                                      #
 #  This script is not associated with the official Pterodactyl Panel.  #
@@ -93,7 +93,7 @@ panel(){
 finish(){
     clear
     cd
-    echo -e "Summary of the installation\n\nPanel URL: $FQDN\nWebserver: $WEBSERVER\nUsername: $USERNAME\nFirst name: $FIRSTNAME\nLast name: $LASTNAME\nPassword: $USERPASSWORD\nDatabase password: $DBPASSWORD\nPassword for Database Host: $DBPASSWORDHOST" >> panel_credentials.txt
+    echo -e "Summary of the installation\n\nPanel URL: $FQDN\nWebserver: $WEBSERVER\n\nPANEL ADMIN\nUsername: $USERNAME\nFirst name: $FIRSTNAME\nLast name: $LASTNAME\nPassword: $USERPASSWORD\n\nDatabase user for PANEL user\nUsername for PANEL: pterodactyluser\nDatabase password for PANEL: $DBPASSWORD\n\nDatabase user for HOST\nUsername for Database Host: pterodactyl\nPassword for Database Host: $DBPASSWORDHOST" >> /root/panel_credentials.txt
 
     echo "[!] Installation of Pterodactyl Panel done"
     echo ""
@@ -106,11 +106,16 @@ finish(){
     echo "    Last name: $LASTNAME"
     echo "    Password: $USERPASSWORD"
     echo "" 
+    echo "    Database user for PANEL"
+    echo "    Database username: pterodactyluser"
     echo "    Database password: $DBPASSWORD"
+    echo "" 
+    echo "    Database user for HOST"
+    echo "    Database username: pterodactyl"
     echo "    Password for Database Host: $DBPASSWORDHOST"
     echo "" 
     echo "    These credentials has been saved in a file called" 
-    echo "    panel_credentials.txt in your current directory"
+    echo "    panel_credentials.txt in directory of root user"
     echo ""
     echo "    Would you like to install Wings too? (Y/N)"
     read -r WINGS_ON_PANEL
@@ -155,13 +160,13 @@ panel_conf(){
     php artisan migrate --seed --force
     php artisan p:user:make --email="$EMAIL" --username="$USERNAME" --name-first="$FIRSTNAME" --name-last="$LASTNAME" --password="$USERPASSWORD" --admin=1
     chown -R www-data:www-data /var/www/pterodactyl/*
-    curl -o /etc/systemd/system/pteroq.service https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pteroq.service
+    curl -o /etc/systemd/system/pteroq.service https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pteroq.service
     (crontab -l ; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1")| crontab -
     sudo systemctl enable --now redis-server
     sudo systemctl enable --now pteroq.service
     if [ "$SSLSTATUS" = "true" ] && [ "$WEBSERVER" = "NGINX" ]; then
         rm -rf /etc/nginx/sites-enabled/default
-        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pterodactyl-nginx-ssl.conf
+        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-nginx-ssl.conf
         sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-enabled/pterodactyl.conf
 
         systemctl stop nginx
@@ -171,7 +176,7 @@ panel_conf(){
         fi
     if [ "$SSLSTATUS" = "true" ] && [ "$WEBSERVER" = "Apache" ]; then
         a2dissite 000-default.conf && systemctl reload apache2
-        curl -o /etc/apache2/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pterodactyl-apache-ssl.conf
+        curl -o /etc/apache2/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-apache-ssl.conf
         sed -i -e "s@<domain>@${FQDN}@g" /etc/apache2/sites-enabled/pterodactyl.conf
         apt install libapache2-mod-php
         sudo a2enmod rewrite
@@ -183,14 +188,14 @@ panel_conf(){
         fi
     if [ "$SSLSTATUS" = "false" ] && [ "$WEBSERVER" = "NGINX" ]; then
         rm -rf /etc/nginx/sites-enabled/default
-        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pterodactyl-nginx.conf
+        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-nginx.conf
         sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-enabled/pterodactyl.conf
         systemctl restart nginx
         finish
         fi
     if [ "$SSLSTATUS" = "false" ] && [ "$WEBSERVER" = "Apache" ]; then
         a2dissite 000-default.conf && systemctl reload apache2
-        curl -o /etc/apache2/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pterodactyl-apache.conf
+        curl -o /etc/apache2/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-apache.conf
         sed -i -e "s@<domain>@${FQDN}@g" /etc/apache2/sites-enabled/pterodactyl.conf
         sudo a2enmod rewrite
         systemctl stop apache2
@@ -283,9 +288,17 @@ panel_summary(){
     echo "    First name: $FIRSTNAME"
     echo "    Last name: $LASTNAME"
     echo "    Password: $USERPASSWORD"
-    echo ""
-    echo "    These credentials will be saved in a file called" 
-    echo "    panel_credentials.txt in your current directory"
+    echo "" 
+    echo "    Database user for PANEL user"
+    echo "    Database username: pterodactyluser"
+    echo "    Database password: $DBPASSWORD"
+    echo "" 
+    echo "    Database user for HOST user"
+    echo "    Database username: pterodactyl"
+    echo "    Password for Database Host: $DBPASSWORDHOST"
+    echo "" 
+    echo "    These credentials has been saved in a file called" 
+    echo "    panel_credentials.txt in directory of root user"
     echo "" 
     echo "    Do you want to start the installation? (Y/N)" 
     read -r PANEL_INSTALLATION
@@ -400,7 +413,7 @@ wings_full(){
         mkdir -p /etc/pterodactyl || exit || echo "An error occurred. Could not create directory." || exit
         apt-get -y install curl tar unzip
         curl -L -o /usr/local/bin/wings "https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_$([[ "$(uname -m)" == "x86_64" ]] && echo "amd64" || echo "arm64")"
-        curl -o /etc/systemd/system/wings.service https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/wings.service
+        curl -o /etc/systemd/system/wings.service https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/wings.service
         chmod u+x /usr/local/bin/wings
         clear
         echo ""
@@ -416,7 +429,7 @@ wings_full(){
         mkdir -p /etc/pterodactyl || exit || echo "An error occurred. Could not create directory." || exit
         apt-get -y install curl tar unzip
         curl -L -o /usr/local/bin/wings "https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_$([[ "$(uname -m)" == "x86_64" ]] && echo "amd64" || echo "arm64")"
-        curl -o /etc/systemd/system/wings.service https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/wings.service
+        curl -o /etc/systemd/system/wings.service https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/wings.service
         chmod u+x /usr/local/bin/wings
         clear
         echo ""
@@ -455,7 +468,7 @@ phpmyadmin(){
 
 phpmyadmin_finish(){
     cd
-    echo -e "PHPMyAdmin Installation\n\nSummary of the installation\n\nPHPMyAdmin URL: $PHPMYADMIN_FQDN\nPreselected webserver: NGINX\nSSL: $PHPMYADMIN_SSLSTATUS\nUser: $PHPMYADMIN_USER_LOCAL\nEmail: $PHPMYADMIN_EMAIL" > phpmyadmin_credentials.txt
+    echo -e "PHPMyAdmin Installation\n\nSummary of the installation\n\nPHPMyAdmin URL: $PHPMYADMIN_FQDN\nPreselected webserver: NGINX\nSSL: $PHPMYADMIN_SSLSTATUS\nEmail: $PHPMYADMIN_EMAIL\n\nPHPMyAdmin SQL user\nUser: $PHPMYADMIN_USER_LOCAL\nPassword: $PHPMYADMIN_USER_PWD\n\nTo finish PHPMyAdmin settings do bellow steps:\n1. Log in on $PHPMYADMIN_FQDN website with the details above.\n2. Go to the phpmyadmin database.\n3. In the top menu bar, click on the 'Settings' menu item.\n4. In the warning bar that appears, click on the 'Find out why' link.\n5. In the warning bar that appears, click on the 'create' link and import the basic tables\nThat's all." > /root/phpmyadmin_credentials.txt
     clear
     echo "[!] Installation of PHPMyAdmin done"
     echo ""
@@ -463,37 +476,75 @@ phpmyadmin_finish(){
     echo "    PHPMyAdmin URL: $PHPMYADMIN_FQDN"
     echo "    Preselected webserver: NGINX"
     echo "    SSL: $PHPMYADMIN_SSLSTATUS"
-    echo "    User: $PHPMYADMIN_USER_LOCAL"
     echo "    Email: $PHPMYADMIN_EMAIL"
     echo ""
+    echo "    PHPMyAdmin SQL user"
+    echo "    User: $PHPMYADMIN_USER_LOCAL"
+    echo "    Password: $PHPMYADMIN_USER_PWD"
+    echo ""
     echo "    These credentials will has been saved in a file called" 
-    echo "    phpmyadmin_credentials.txt in your current directory"
+    echo "    phpmyadmin_credentials.txt in directory of root user"
+    echo ""
+    echo "    Please, read credentials and follow and follow the"
+    echo "    instructions there to finish setting up PHPMyAdmin."
 }
 
 
 phpmyadminweb(){
     if  [ "$PHPMYADMIN_SSLSTATUS" =  "true" ]; then
         rm -rf /etc/nginx/sites-enabled/default
-        curl -o /etc/nginx/sites-enabled/phpmyadmin.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/phpmyadmin-ssl.conf
-        sed -i -e "s@<domain>@${PHPMYADMIN_FQDN}@g" /etc/nginx/sites-enabled/phpmyadmin.conf
+        curl -o /etc/nginx/sites-enabled/phpmyadmin.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/phpmyadmin-ssl.conf || exit || echo "An error occurred. cURL is not installed." || exit
+        sed -i -e "s@<domain>@${PHPMYADMIN_FQDN}@g" /etc/nginx/sites-enabled/phpmyadmin.conf || exit || echo "An error occurred. NGINX is not installed." || exit
         systemctl stop nginx || exit || echo "An error occurred. NGINX is not installed." || exit
         certbot certonly --standalone -d $PHPMYADMIN_FQDN --staple-ocsp --no-eff-email -m $PHPMYADMIN_EMAIL --agree-tos || exit || echo "An error occurred. Certbot not installed." || exit
         systemctl start nginx || exit || echo "An error occurred. NGINX is not installed." || exit
 
         apt install mariadb-server
-        PHPMYADMIN_USER=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
-        mysql -u root -e "CREATE USER 'admin'@'localhost' IDENTIFIED BY '$PHPMYADMIN_USER';" && mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION;"
+        PHPMYADMIN_USER_PWD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
+        mysql -u root -e "CREATE USER '$PHPMYADMIN_USER_LOCAL'@'localhost' IDENTIFIED BY '$PHPMYADMIN_USER_PWD';" && mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$PHPMYADMIN_USER_LOCAL'@'localhost' WITH GRANT OPTION;"
+        mysql -u root -e "create database phpmyadmin"
+
+        BLOWFISH_SECRET=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+        curl -o /var/www/phpmyadmin/config.inc.php https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/phpmyadminconfig.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        sed -i -e "s@<blowfish_secret>@${BLOWFISH_SECRET}@g" /var/www/phpmyadmin/config.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        sed -i -e "s@<controluser>@${PHPMYADMIN_USER_LOCAL}@g" /var/www/phpmyadmin/config.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        sed -i -e "s@<controlpass>@${PHPMYADMIN_USER_PWD}@g" /var/www/phpmyadmin/config.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        chown -R www-data:www-data config.inc.php
+        chmod 660 config.inc.php
+        rm -rf /var/www/phpmyadmin/phpMyAdmin-*-all-languages/
+        rm -rf /var/www/phpmyadmin/phpMyAdmin-latest-all-languages.tar.gz
+        rm -rf /var/www/phpmyadmin/boodark-1.1.0.zip
+        rm -rf /var/www/phpmyadmin/config.sample.inc.php
+        rm -rf /var/www/phpmyadmin/config
+        rm -rf /var/www/phpmyadmin/setup
+    
         phpmyadmin_finish
         fi
     if  [ "$PHPMYADMIN_SSLSTATUS" =  "false" ]; then
         rm -rf /etc/nginx/sites-enabled/default || exit || echo "An error occurred. NGINX is not installed." || exit
-        curl -o /etc/nginx/sites-enabled/phpmyadmin.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/phpmyadmin.conf || exit || echo "An error occurred. cURL is not installed." || exit
+        curl -o /etc/nginx/sites-enabled/phpmyadmin.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/phpmyadmin.conf || exit || echo "An error occurred. cURL is not installed." || exit
         sed -i -e "s@<domain>@${PHPMYADMIN_FQDN}@g" /etc/nginx/sites-enabled/phpmyadmin.conf || exit || echo "An error occurred. NGINX is not installed." || exit
         systemctl restart nginx || exit || echo "An error occurred. NGINX is not installed." || exit
 
         apt install mariadb-server
-        PHPMYADMIN_USER=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
-        mysql -u root -e "CREATE USER '$PHPMYADMIN_USER_LOCAL'@'localhost' IDENTIFIED BY '$PHPMYADMIN_USER';" && mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION;"
+        PHPMYADMIN_USER_PWD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
+        mysql -u root -e "CREATE USER '$PHPMYADMIN_USER_LOCAL'@'localhost' IDENTIFIED BY '$PHPMYADMIN_USER_PWD';" && mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$PHPMYADMIN_USER_LOCAL'@'localhost' WITH GRANT OPTION;"
+        mysql -u root -e "create database phpmyadmin"
+
+        BLOWFISH_SECRET=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1`
+        curl -o /var/www/phpmyadmin/config.inc.php https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/phpmyadminconfig.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        sed -i -e "s@<blowfish_secret>@${BLOWFISH_SECRET}@g" /var/www/phpmyadmin/config.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        sed -i -e "s@<controluser>@${PHPMYADMIN_USER_LOCAL}@g" /var/www/phpmyadmin/config.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        sed -i -e "s@<controlpass>@${PHPMYADMIN_USER_PWD}@g" /var/www/phpmyadmin/config.inc.php || exit || echo "An error occurred. PHPMyAdmin is not installed." || exit
+        chown -R www-data:www-data config.inc.php
+        chmod 660 config.inc.php
+        rm -rf /var/www/phpmyadmin/phpMyAdmin-*-all-languages/
+        rm -rf /var/www/phpmyadmin/phpMyAdmin-latest-all-languages.tar.gz
+        rm -rf /var/www/phpmyadmin/boodark-1.1.0.zip
+        rm -rf /var/www/phpmyadmin/config.sample.inc.php
+        rm -rf /var/www/phpmyadmin/config
+        rm -rf /var/www/phpmyadmin/setup
+    
         phpmyadmin_finish
         fi
 }
@@ -519,25 +570,24 @@ phpmyadmin_fqdn(){
 phpmyadmininstall(){
     if  [ "$dist" =  "ubuntu" ]; then
         apt install nginx certbot -y
-        mkdir /var/www/phpmyadmin && cd /var/www/phpmyadmin || exit || echo "An error occurred. Could not create directory." || exit
+        mkdir /var/www/phpmyadmin && mkdir /var/www/phpmyadmin/tmp/ || exit || echo "An error occurred. Could not create directory." || exit
         cd /var/www/phpmyadmin
 
         LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
-        apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip}
-        wget https://files.phpmyadmin.net/phpMyAdmin/5.2.0/phpMyAdmin-5.2.0-all-languages.tar.gz
-        tar xzf phpMyAdmin-5.2.0-all-languages.tar.gz
-        mv /var/www/phpmyadmin/phpMyAdmin-5.2.0-all-languages/* /var/www/phpmyadmin
+        apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip,bz2}
+        wget https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+        tar xzf phpMyAdmin-latest-all-languages.tar.gz
+        mv /var/www/phpmyadmin/phpMyAdmin-*-all-languages/* /var/www/phpmyadmin
+        wget https://files.phpmyadmin.net/themes/boodark/1.1.0/boodark-1.1.0.zip
+        unzip -qq boodark-1.1.0.zip -d /var/www/phpmyadmin/themes/
         chown -R www-data:www-data *
-        mkdir config
-        chmod o+rw config
-        cp config.sample.inc.php config/config.inc.php
-        chmod o+w config/config.inc.php
-        rm -rf /var/www/phpmyadmin/config
+    
         phpmyadminweb
         fi
     if  [ "$dist" =  "debian" ]; then
         apt install nginx certbot -y
-        mkdir /var/www/phpmyadmin && cd /var/www/phpmyadmin || exit || echo "An error occurred. Could not create directory." || exit
+        mkdir /var/www/phpmyadmin && mkdir /var/www/phpmyadmin/tmp/ || exit || echo "An error occurred. Could not create directory." || exit
+        cd /var/www/phpmyadmin
         echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
         curl -fsSL  https://packages.sury.org/php/apt.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
         apt update -y
@@ -545,17 +595,15 @@ phpmyadmininstall(){
         apt-get update
         apt -y install software-properties-common curl ca-certificates gnupg2 sudo lsb-release
         apt-add-repository universe
-        apt install -y php8.1 php8.1-{common,cli,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip}
+        apt install -y php8.1 php8.1-{common,cli,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip,bz2}
 
-        wget https://files.phpmyadmin.net/phpMyAdmin/5.2.0/phpMyAdmin-5.2.0-all-languages.tar.gz
-        tar xzf phpMyAdmin-5.2.0-all-languages.tar.gz
-        mv /var/www/phpmyadmin/phpMyAdmin-5.2.0-all-languages/* /var/www/phpmyadmin
+        wget https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+        tar xzf phpMyAdmin-latest-all-languages.tar.gz
+        mv /var/www/phpmyadmin/phpMyAdmin-*-all-languages/* /var/www/phpmyadmin
+        wget https://files.phpmyadmin.net/themes/boodark/1.1.0/boodark-1.1.0.zip
+        unzip -qq boodark-1.1.0.zip -d /var/www/phpmyadmin/themes/
         chown -R www-data:www-data *
-        mkdir config
-        chmod o+rw config
-        cp config.sample.inc.php config/config.inc.php
-        chmod o+w config/config.inc.php
-        rm -rf /var/www/phpmyadmin/config
+         
         phpmyadminweb
         fi
 }
@@ -568,11 +616,14 @@ phpmyadmin_summary(){
     echo "    PHPMyAdmin URL: $PHPMYADMIN_FQDN"
     echo "    Preselected webserver: NGINX"
     echo "    SSL: $PHPMYADMIN_SSLSTATUS"
-    echo "    User: $PHPMYADMIN_USER_LOCAL"
     echo "    Email: $PHPMYADMIN_EMAIL"
     echo ""
+    echo "    PHPMyAdmin SQL user"
+    echo "    User: $PHPMYADMIN_USER_LOCAL"
+    echo "    Password: IT WILL BE GENERATED AUTOMATICALLY"
+    echo ""
     echo "    These credentials have been saved in a file called" 
-    echo "    phpmyadmin_credentials.txt in your current directory"
+    echo "    phpmyadmin_credentials.txt in directory of root user"
     echo "" 
     echo "    Do you want to start the installation? (Y/N)" 
     read -r PHPMYADMIN_INSTALLATION
@@ -599,8 +650,11 @@ send_phpmyadmin_summary(){
         echo "    PHPMyAdmin URL: $PHPMYADMIN_FQDN"
         echo "    Preselected webserver: NGINX"
         echo "    SSL: $PHPMYADMIN_SSLSTATUS"
-        echo "    User: $PHPMYADMIN_USER_LOCAL"
         echo "    Email: $PHPMYADMIN_EMAIL"
+        echo ""
+        echo "    PHPMyAdmin SQL user"
+        echo "    User: $PHPMYADMIN_USER_LOCAL"
+        echo "    Password: IT WILL BE GENERATED AUTOMATICALLY"
         echo ""
     else
         echo ""
@@ -608,8 +662,11 @@ send_phpmyadmin_summary(){
         echo "    PHPMyAdmin URL: $PHPMYADMIN_FQDN"
         echo "    Preselected webserver: NGINX"
         echo "    SSL: $PHPMYADMIN_SSLSTATUS"
-        echo "    User: $PHPMYADMIN_USER_LOCAL"
         echo "    Email: $PHPMYADMIN_EMAIL"
+        echo ""
+        echo "    PHPMyAdmin SQL user"
+        echo "    User: $PHPMYADMIN_USER_LOCAL"
+        echo "    Password: IT WILL BE GENERATED AUTOMATICALLY"
         echo ""
     fi
 }
@@ -737,7 +794,7 @@ switch(){
         echo "    The script is now changing your Pterodactyl Domain."
         echo "      This may take a couple seconds for the SSL part, as SSL certificates are being generated."
         rm /etc/nginx/sites-enabled/pterodactyl.conf
-        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pterodactyl-nginx-ssl.conf || exit || warning "Pterodactyl Panel not installed!"
+        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-nginx-ssl.conf || exit || warning "Pterodactyl Panel not installed!"
         sed -i -e "s@<domain>@${DOMAINSWITCH}@g" /etc/nginx/sites-enabled/pterodactyl.conf
         systemctl stop nginx
         certbot certonly --standalone -d $DOMAINSWITCH --staple-ocsp --no-eff-email -m $EMAILSWITCHDOMAINS --agree-tos || exit || warning "Errors accured."
@@ -758,7 +815,7 @@ switch(){
     if  [ "$SSLSWITCH" =  "false" ]; then
         echo "[!] Switching your domain.. This wont take long!"
         rm /etc/nginx/sites-enabled/pterodactyl.conf || exit || echo "An error occurred. Could not delete file." || exit
-        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/guldkage/Pterodactyl-Installer/main/configs/pterodactyl-nginx.conf || exit || warning "Pterodactyl Panel not installed!"
+        curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-nginx.conf || exit || warning "Pterodactyl Panel not installed!"
         sed -i -e "s@<domain>@${DOMAINSWITCH}@g" /etc/nginx/sites-enabled/pterodactyl.conf
         systemctl restart nginx
         echo ""
@@ -865,8 +922,10 @@ options(){
 
 clear
 echo ""
-echo "Pterodactyl Installer @ v2.0"
-echo "Copyright 2022, Malthe K, <me@malthe.cc>"
+echo "Pterodactyl Installer @ v2.1"
+echo "Copyright 2023, dension - Silverhost.hu, <madarasz.laszlo@gmail.com>"
+echo "https://github.com/dension0/Pterodactyl-Installer"
+echo "based on Malthe K, <me@malthe.cc>"
 echo "https://github.com/guldkage/Pterodactyl-Installer"
 echo ""
 echo "This script is not associated with the official Pterodactyl Panel."
