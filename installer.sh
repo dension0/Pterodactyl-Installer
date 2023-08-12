@@ -4,7 +4,9 @@
 ########################################################################
 #                                                                      #
 #            Pterodactyl Installer, Updater, Remover and More          #
-#            Copyright 2022, Malthe K, <me@malthe.cc> hej              # 
+# Copyright 2023, dension - Silverhost.hu, <madarasz.laszlo@gmail.com> #
+# https://github.com/dension0/Pterodactyl-Installer/edit/main/LICENSE  #
+#        based on Copyright 2022, Malthe K, <me@malthe.cc> hej         #
 # https://github.com/guldkage/Pterodactyl-Installer/blob/main/LICENSE  #
 #                                                                      #
 #  This script is not associated with the official Pterodactyl Panel.  #
