@@ -168,6 +168,7 @@ panel_conf(){
         rm -rf /etc/nginx/sites-enabled/default
         curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-nginx-ssl.conf
         sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-enabled/pterodactyl.conf
+        ln -s /etc/nginx/sites-enabled/pterodactyl.conf /etc/nginx/sites-available/pterodactyl.conf
 
         systemctl stop nginx
         certbot certonly --standalone -d $FQDN --staple-ocsp --no-eff-email -m $EMAIL --agree-tos
@@ -190,6 +191,7 @@ panel_conf(){
         rm -rf /etc/nginx/sites-enabled/default
         curl -o /etc/nginx/sites-enabled/pterodactyl.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/pterodactyl-nginx.conf
         sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-enabled/pterodactyl.conf
+        ln -s /etc/nginx/sites-enabled/pterodactyl.conf /etc/nginx/sites-available/pterodactyl.conf
         systemctl restart nginx
         finish
         fi
@@ -495,6 +497,7 @@ phpmyadminweb(){
         rm -rf /etc/nginx/sites-enabled/default
         curl -o /etc/nginx/sites-enabled/phpmyadmin.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/phpmyadmin-ssl.conf || exit || echo "An error occurred. cURL is not installed." || exit
         sed -i -e "s@<domain>@${PHPMYADMIN_FQDN}@g" /etc/nginx/sites-enabled/phpmyadmin.conf || exit || echo "An error occurred. NGINX is not installed." || exit
+        ln -s /etc/nginx/sites-enabled/phpmyadmin.conf /etc/nginx/sites-available/phpmyadmin.conf
         systemctl stop nginx || exit || echo "An error occurred. NGINX is not installed." || exit
         certbot certonly --standalone -d $PHPMYADMIN_FQDN --staple-ocsp --no-eff-email -m $PHPMYADMIN_EMAIL --agree-tos || exit || echo "An error occurred. Certbot not installed." || exit
         systemctl start nginx || exit || echo "An error occurred. NGINX is not installed." || exit
@@ -524,6 +527,7 @@ phpmyadminweb(){
         rm -rf /etc/nginx/sites-enabled/default || exit || echo "An error occurred. NGINX is not installed." || exit
         curl -o /etc/nginx/sites-enabled/phpmyadmin.conf https://raw.githubusercontent.com/dension0/Pterodactyl-Installer/main/configs/phpmyadmin.conf || exit || echo "An error occurred. cURL is not installed." || exit
         sed -i -e "s@<domain>@${PHPMYADMIN_FQDN}@g" /etc/nginx/sites-enabled/phpmyadmin.conf || exit || echo "An error occurred. NGINX is not installed." || exit
+        ln -s /etc/nginx/sites-enabled/phpmyadmin.conf /etc/nginx/sites-available/phpmyadmin.conf
         systemctl restart nginx || exit || echo "An error occurred. NGINX is not installed." || exit
 
         apt install mariadb-server
